@@ -12,7 +12,6 @@ const Testing = () => {
   const [showThankYou, setShowThankYou] = useState(false);
   const [validationError, setValidationError] = useState('');
 
-
   const square1Ref = useRef(null);
   const square2Ref = useRef(null);
   const square3Ref = useRef(null);
@@ -21,24 +20,19 @@ const Testing = () => {
   const loadingSquare2Ref = useRef(null);
   const loadingSquare3Ref = useRef(null);
 
- 
   const validateInput = (input, fieldName) => {
-  
     if (!input || !input.trim()) {
       return `${fieldName} is required`;
     }
 
-  
     if (/\d/.test(input)) {
       return `${fieldName} cannot contain numbers`;
     }
 
-    
     if (!/^[a-zA-Z\s\-']+$/.test(input.trim())) {
       return `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`;
     }
 
-    
     if (input.trim().length < 2) {
       return `${fieldName} must be at least 2 characters long`;
     }
@@ -46,7 +40,6 @@ const Testing = () => {
     return null;
   };
 
-  
   const submitToAPI = async (userData) => {
     try {
       const response = await fetch('https://us-central1-api-skinstric-ai.cloudfunctions.net/skinstricPhaseOne', {
@@ -66,7 +59,6 @@ const Testing = () => {
 
       const result = await response.json();
       
-      
       localStorage.setItem('skinstricUserData', JSON.stringify({
         name: userData.name,
         location: userData.location,
@@ -81,7 +73,6 @@ const Testing = () => {
     }
   };
 
- 
   useEffect(() => {
     if (square1Ref.current && square2Ref.current && square3Ref.current && !isLoading) {
       gsap.to(square1Ref.current, {
@@ -106,7 +97,6 @@ const Testing = () => {
       });
     }
   }, [isLoading]);
-
 
   useEffect(() => {
     if (loadingSquare1Ref.current && loadingSquare2Ref.current && loadingSquare3Ref.current && isLoading) {
@@ -137,6 +127,11 @@ const Testing = () => {
     navigate('/');
   };
 
+  const handleProceedClick = () => {
+    console.log('Proceed clicked');
+    navigate('/result');
+  };
+
   const handleBoxHoverEnter = () => {
     gsap.to(backBoxRef.current, {
       scale: 1.1,
@@ -155,7 +150,6 @@ const Testing = () => {
 
   const handleInputChange = (e) => {
     setCurrentInput(e.target.value);
-   
     if (validationError) {
       setValidationError('');
     }
@@ -164,7 +158,6 @@ const Testing = () => {
   const handleKeyPress = async (e) => {
     if (e.key === 'Enter' && currentInput.trim()) {
       if (step === 1) {
-
         const nameError = validateInput(currentInput, 'Name');
         if (nameError) {
           setValidationError(nameError);
@@ -176,7 +169,6 @@ const Testing = () => {
         setCurrentInput('');
         setValidationError('');
       } else if (step === 2) {
-        
         const locationError = validateInput(currentInput, 'City');
         if (locationError) {
           setValidationError(locationError);
@@ -188,7 +180,6 @@ const Testing = () => {
         setValidationError('');
 
         try {
-          
           const result = await submitToAPI({
             name: name,
             location: currentInput.trim()
@@ -197,12 +188,10 @@ const Testing = () => {
           console.log('API Response:', result);
 
           setTimeout(() => {
-          
             setShowThankYou(true);
 
-           
             setTimeout(() => {
-           
+              navigate('/result');
             }, 4000);
           }, 2000); 
         } catch (error) {
@@ -306,10 +295,7 @@ const Testing = () => {
         </div>
 
         <div 
-          onClick={() => {
-            console.log('Proceed clicked');
-        
-          }}
+          onClick={handleProceedClick}
           className="absolute bottom-8 right-10 flex items-center space-x-7 cursor-pointer z-50"
         >
           <span className="text-sm font-bold text-black uppercase tracking-wide">PROCEED</span>
@@ -447,4 +433,3 @@ const Testing = () => {
 }
 
 export default Testing
-
