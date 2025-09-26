@@ -3,6 +3,7 @@ import Hero from "./components/Hero"
 import Navbar from "./components/Navbar"
 import Testing from "./components/Testing"
 import Result from "./components/Result"
+import Select from "./components/Select"
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         } />
         <Route path="/testing" element={<Testing />} />
         <Route path="/result" element={<Result />} />
+        <Route path="/select" element={<Select />} />
       </Routes>
     </Router>
   )
