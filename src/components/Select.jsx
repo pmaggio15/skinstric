@@ -14,7 +14,11 @@ const Select = () => {
   };
 
   const handleGetSummaryClick = () => {
-    console.log('Get Summary clicked');
+    navigate('/summary');
+  };
+
+  const handleDemographicsClick = () => {
+    navigate('/summary');
   };
 
   const handleMouseEnter = (boxName) => {
@@ -24,7 +28,6 @@ const Select = () => {
   const handleMouseLeave = () => {
     setHoveredBox(null);
   };
-
 
   useEffect(() => {
     if (hoveredBox && borderRef.current) {
@@ -114,6 +117,7 @@ const Select = () => {
               className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4"
               onMouseEnter={() => handleMouseEnter('demographics')}
               onMouseLeave={handleMouseLeave}
+              onClick={handleDemographicsClick}
             >
               <div className="w-40 h-40 bg-gray-300 rotate-45 flex items-center justify-center cursor-pointer hover:bg-gray-400 hover:scale-110 transition-all duration-300">
                 <span className="text-black font-bold text-sm uppercase tracking-wide -rotate-45">

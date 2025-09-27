@@ -12,6 +12,14 @@ const Result = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [showCameraLoading, setShowCameraLoading] = useState(false);
+  const [stream, setStream] = useState(null);
+
+  const cameraLoadingSquare1Ref = useRef(null);
+  const cameraLoadingSquare2Ref = useRef(null);
+  const cameraLoadingSquare3Ref = useRef(null);
 
   const square1Ref = useRef(null);
   const square2Ref = useRef(null);
@@ -20,7 +28,10 @@ const Result = () => {
   const leftSquare2Ref = useRef(null);
   const leftSquare3Ref = useRef(null);
   const galleryIconRef = useRef(null);
+  const cameraIconRef = useRef(null);
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const processingSquare1Ref = useRef(null);
   const processingSquare2Ref = useRef(null);
   const processingSquare3Ref = useRef(null);
@@ -44,7 +55,7 @@ const Result = () => {
   useEffect(() => {
     if (square1Ref.current && square2Ref.current && square3Ref.current && 
         leftSquare1Ref.current && leftSquare2Ref.current && leftSquare3Ref.current && 
-        !loading && !isProcessingImage) {
+        !loading && !isProcessingImage && !showCamera && !showCameraModal && !showCameraLoading) {
       
       gsap.to(square1Ref.current, {
         rotation: 360,
@@ -88,7 +99,35 @@ const Result = () => {
         repeat: -1
       });
     }
-  }, [loading, isProcessingImage]);
+  }, [loading, isProcessingImage, showCamera, showCameraModal]);
+
+  useEffect(() => {
+    if (cameraLoadingSquare1Ref.current && cameraLoadingSquare2Ref.current && cameraLoadingSquare3Ref.current && showCameraLoading) {
+      gsap.to(cameraLoadingSquare1Ref.current, {
+        rotation: 360,
+        duration: 65,
+        ease: "none",
+        repeat: -1,
+        delay: 0
+      });
+
+      gsap.to(cameraLoadingSquare2Ref.current, {
+        rotation: 360,
+        duration: 70,
+        ease: "none",
+        repeat: -1,
+        delay: 1
+      });
+
+      gsap.to(cameraLoadingSquare3Ref.current, {
+        rotation: 360,
+        duration: 75,
+        ease: "none",
+        repeat: -1,
+        delay: 3
+      });
+    }
+  }, [showCameraLoading]);
 
   useEffect(() => {
     if (processingSquare1Ref.current && processingSquare2Ref.current && processingSquare3Ref.current && isProcessingImage) {
@@ -115,6 +154,14 @@ const Result = () => {
     }
   }, [isProcessingImage]);
 
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
   const handleGalleryHover = () => {
     if (galleryIconRef.current) {
       gsap.to(galleryIconRef.current, {
@@ -135,9 +182,132 @@ const Result = () => {
     }
   };
 
+  const handleCameraHover = () => {
+    if (cameraIconRef.current) {
+      gsap.to(cameraIconRef.current, {
+        scale: 1.1,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    }
+  };
+
+  const handleCameraLeave = () => {
+    if (cameraIconRef.current) {
+      gsap.to(cameraIconRef.current, {
+        scale: 1,
+        duration: 0.3,
+        ease: "power2.out"
+      });
+    }
+  };
+
   const handleGalleryClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleCameraClick = () => {
+    setShowCameraModal(true);
+  };
+
+  const handleCameraAllow = async () => {
+    setShowCameraModal(false);
+    setShowCameraLoading(true);
+    
+    try {
+      console.log('Requesting camera access...');
+      
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: {
+          facingMode: 'user'
+        },
+        audio: false
+      });
+      
+      console.log('Camera access granted, stream:', mediaStream);
+      setStream(mediaStream);
+
+      setTimeout(() => {
+        setShowCameraLoading(false);
+        setShowCamera(true);
+        
+        if (videoRef.current && mediaStream) {
+          console.log('Setting is playing');
+          videoRef.current.srcObject = mediaStream;
+          videoRef.current.play().catch(e => console.error('Error playing video:', e));
+        }
+      }, 4000);
+      
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setShowCameraLoading(false);
+      
+      if (error.name === 'NotAllowedError') {
+        alert('Camera access denied. Please allow camera permissions in your browser and try again.');
+      } else if (error.name === 'NotFoundError') {
+        alert('No camera found. Please connect a camera and try again.');
+      } else if (error.name === 'NotSupportedError') {
+        alert('Camera access is not supported in this browser.');
+      } else {
+        alert(`Error accessing camera: ${error.message}. Please try again.`);
+      }
+    }
+  };
+
+  const handleCameraDeny = () => {
+    setShowCameraModal(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+      
+      setShowCamera(false);
+      setSelectedImage(imageData);
+      processImage(imageData);
+    }
+  };
+
+  const closeCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const processImage = async (imageData) => {
+    setIsProcessingImage(true);
+    
+    try {
+      const apiResult = await submitImageToAPI(imageData);
+      
+      setTimeout(() => {
+        setIsProcessingImage(false);
+        navigate('/select');
+      }, 3000);
+    } catch (error) {
+      console.error('Failed to process image:', error);
+      setTimeout(() => {
+        setIsProcessingImage(false);
+        alert('Failed to process image. Please try again.');
+      }, 3000);
     }
   };
 
@@ -145,28 +315,11 @@ const Result = () => {
     const file = event.target.files[0];
     if (file) {
       if (file.type.startsWith('image/')) {
-        setIsProcessingImage(true); 
-        
         const reader = new FileReader();
-        reader.onload = async (e) => {
+        reader.onload = (e) => {
           setSelectedImage(e.target.result);
           console.log('Image selected:', file.name);
-          
-          try {
-            // Call the Phase Two API with the image data
-            const apiResult = await submitImageToAPI(e.target.result);
-            
-            setTimeout(() => {
-              setIsProcessingImage(false);
-              navigate('/select');
-            }, 3000);
-          } catch (error) {
-            console.error('Failed to process image:', error);
-            setTimeout(() => {
-              setIsProcessingImage(false);
-              alert('Failed to process image. Please try again.');
-            }, 3000);
-          }
+          processImage(e.target.result);
         };
         reader.readAsDataURL(file);
       } else {
@@ -176,7 +329,15 @@ const Result = () => {
   };
 
   const handleBackClick = () => {
-    navigate('/testing');
+    if (showCamera) {
+      closeCamera();
+    } else if (showCameraModal) {
+      setShowCameraModal(false);
+    } else if (showCameraLoading) {
+      setShowCameraLoading(false);
+    } else {
+      navigate('/testing');
+    }
   };
 
   const handleStartOver = () => {
@@ -265,30 +426,27 @@ const Result = () => {
             </h2>
           </div>
 
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="flex items-center justify-center h-full">
+            <div className="relative">
               <div 
                 ref={processingSquare1Ref}
-                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-300"
-                style={{ left: '-12.5rem', top: '-12.5rem', marginLeft: '-2.5rem', marginTop: '-1.25rem' }}
+                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
               ></div>
               <div 
                 ref={processingSquare2Ref}
-                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-200"
-                style={{ left: '-12.5rem', top: '-12.5rem', marginLeft: '2.5rem', marginTop: '1.25rem' }}
+                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
               ></div>
               <div 
                 ref={processingSquare3Ref}
-                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-100"
-                style={{ left: '-12.5rem', top: '-12.5rem', marginLeft: '2.5rem', marginTop: '-1.25rem' }}
+                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
               ></div>
               
-              <div className="absolute top-0 left-0 z-50 pointer-events-none">
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
                 <div className="text-center">
-                  <div className="text-l font-light text-gray-600 text-center" style={{ width: '320px', marginLeft: '-160px', marginTop: '-30px' }}>
+                  <div className="text-l font-light text-gray-600 text-center whitespace-nowrap">
                     PREPARING YOUR ANALYSIS
                   </div>
-                  <div style={{ marginLeft: '-160px', marginTop: '10px' }}>
+                  <div className="mt-4">
                     <LoadingDots />
                   </div>
                 </div>
@@ -304,6 +462,135 @@ const Result = () => {
               <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
             </div>
             <span className="text-sm font-bold text-black uppercase tracking-wide">BACK</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showCameraLoading) {
+    return (
+      <div>
+        <Navbar />
+        <div className="relative h-[calc(100vh-64px)] bg-white overflow-hidden">
+          <div className="absolute top-0 left-0 px-6 py-2 z-30">
+            <h2 className="text-2xs font-bold text-black uppercase tracking-wide">
+              ANALYSIS RESULTS
+            </h2>
+          </div>
+
+          <div className="flex items-center justify-center h-full">
+            <div className="relative">
+              <div 
+                ref={cameraLoadingSquare1Ref}
+                className="absolute w-72 h-72 border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              ></div>
+              <div 
+                ref={cameraLoadingSquare2Ref}
+                className="absolute w-72 h-72 border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              ></div>
+              <div 
+                ref={cameraLoadingSquare3Ref}
+                className="absolute w-72 h-72 border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              ></div>
+
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                <div className="w-32 h-32 overflow-hidden rounded-full">
+                  <img 
+                    src={cameraIcon} 
+                    alt="camera-Icon" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-32 z-20">
+                <div className="text-lg font-bold text-black uppercase tracking-wide text-center whitespace-nowrap">
+                  SETTING UP CAMERA...
+                </div>
+              </div>
+
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-56 z-20 w-screen px-4">
+                <div className="text-sm text-black font-medium uppercase tracking-wide text-center">
+                  <div className="mb-8 whitespace-nowrap">TO GET BETTER RESULTS MAKE SURE TO HAVE</div>
+                  
+                  <div className="flex justify-center space-x-4">
+                    <div className="flex items-center">
+                      <span className="mr-1">◇</span>
+                      <span className='text-xs'>NEUTRAL EXPRESSION</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="mr-1">◇</span>
+                      <span className='text-xs'>FRONTAL POSE</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="mr-1">◇</span>
+                      <span className='text-xs'>ADEQUATE LIGHTING</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div 
+            onClick={handleBackClick}
+            className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30"
+          >
+            <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
+            </div>
+            <span className="text-sm font-bold text-black uppercase tracking-wide">BACK</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (showCamera) {
+    return (
+      <div>
+        <Navbar />
+        <div className="relative h-[calc(100vh-64px)] bg-black overflow-hidden">
+          <div className="absolute top-0 left-0 px-6 py-2 z-30">
+            <h2 className="text-2xs font-bold text-white uppercase tracking-wide">
+              TAKE A SELFIE
+            </h2>
+          </div>
+
+          <div className="flex items-center justify-center h-full">
+            <div className="relative">
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline
+                muted
+                onLoadedMetadata={() => console.log('Video metadata loaded')}
+                onCanPlay={() => console.log('Video can play')}
+                className="w-96 h-96 object-cover rounded-full border-4 border-white transform scale-x-[-1]"
+                style={{ background: '#333' }}
+              />
+              
+              <div className="absolute bottom-[-80px] left-1/2 transform -translate-x-1/2 flex space-x-4">
+                <button
+                  onClick={capturePhoto}
+                  className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center"
+                >
+                  <div className="w-12 h-12 bg-white rounded-full border-2 border-gray-400"></div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <canvas ref={canvasRef} className="hidden" />
+
+          <div 
+            onClick={handleBackClick}
+            className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30"
+          >
+            <div className="w-10 h-10 border border-solid border-white rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <span className="text-sm rotate-[-95deg] transform translate-x-px text-white">▶</span>
+            </div>
+            <span className="text-sm font-bold text-white uppercase tracking-wide">BACK</span>
           </div>
         </div>
       </div>
@@ -349,6 +636,34 @@ const Result = () => {
           style={{ display: 'none' }}
         />
 
+        {showCameraModal && (
+          <div className="fixed inset-0 flex items-center justify-start z-50 pointer-events-none pl-96 mt-14">
+            <div className="bg-black text-white shadow-2xl pointer-events-auto" style={{ width: '300px' }}>
+
+              <div className="bg-black px-4 py-3 border-b border-gray-600">
+                <h3 className="text-xs font-bold uppercase tracking-wide text-white">
+                  ALLOW A.I. TO ACCESS YOUR CAMERA
+                </h3>
+              </div>
+
+              <div className="flex bg-black justify-end">
+                <button
+                  onClick={handleCameraDeny}
+                  className="bg-black text-white hover:text-gray-400 px-4 py-4 font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+                >
+                  DENY
+                </button>
+                <button
+                  onClick={handleCameraAllow}
+                  className="bg-black text-white hover:text-gray-400 px-4 py-4 font-bold text-sm uppercase tracking-wide transition-colors duration-200 ml-4"
+                >
+                  ALLOW
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="absolute left-72 top-1/2 transform -translate-y-1/2 pointer-events-none">
           <div className="relative">
             <div 
@@ -364,9 +679,13 @@ const Result = () => {
               className="absolute w-72 h-72 border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
             ></div>
             
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
               <div 
-                className="w-40 h-40 overflow-hidden rounded-full"
+                ref={cameraIconRef}
+                className="w-40 h-40 overflow-hidden rounded-full cursor-pointer"
+                onMouseEnter={handleCameraHover}
+                onMouseLeave={handleCameraLeave}
+                onClick={handleCameraClick}
               >
                 <img 
                   src={cameraIcon} 
@@ -459,5 +778,7 @@ const Result = () => {
   );
 };
 
-
 export default Result;
+
+
+
