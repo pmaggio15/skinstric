@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 
@@ -11,6 +11,10 @@ const Summary = () => {
   const [selectedRace, setSelectedRace] = useState('east asian');
   const [selectedAge, setSelectedAge] = useState('40-49');
   const [selectedGender, setSelectedGender] = useState('male');
+  
+  const animationRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const startValueRef = useRef(0);
 
   const data = {
     race: {
@@ -39,28 +43,48 @@ const Summary = () => {
     }
   };
 
+  const easeOutCubic = (t) => {
+    return 1 - Math.pow(1 - t, 3);
+  };
 
   useEffect(() => {
     const targetPercentage = getSelectedItemData().percentage;
-    const animationDuration = 1000;
-    const steps = 60;
-    const increment = targetPercentage / steps;
-    let currentStep = 0;
+    const animationDuration = 1500;
+    
+    startValueRef.current = animatedPercentage;
+    startTimeRef.current = null;
 
-    setAnimatedPercentage(0);
+    const animate = (timestamp) => {
+      if (!startTimeRef.current) {
+        startTimeRef.current = timestamp;
+      }
 
-    const animationInterval = setInterval(() => {
-      currentStep++;
-      const newPercentage = Math.min(increment * currentStep, targetPercentage);
-      setAnimatedPercentage(newPercentage);
+      const elapsed = timestamp - startTimeRef.current;
+      const progress = Math.min(elapsed / animationDuration, 1);
+      
+      const easedProgress = easeOutCubic(progress);
+      
+      const currentValue = startValueRef.current + (targetPercentage - startValueRef.current) * easedProgress;
+      setAnimatedPercentage(currentValue);
 
-      if (currentStep >= steps || newPercentage >= targetPercentage) {
-        clearInterval(animationInterval);
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
         setAnimatedPercentage(targetPercentage);
       }
-    }, animationDuration / steps);
+    };
 
-    return () => clearInterval(animationInterval);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [selectedItem, selectedCategory]);
 
   const getCurrentData = () => data[selectedCategory];
@@ -104,7 +128,6 @@ const Summary = () => {
     return `${filledLength} ${circumference}`;
   };
 
-
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
     
@@ -132,7 +155,6 @@ const Summary = () => {
   const handleBackClick = () => navigate('/select');
   const handleHomeClick = () => navigate('/');
 
-
   const renderTitle = () => {
     const { name } = getSelectedItemData();
     
@@ -151,13 +173,13 @@ const Summary = () => {
   const renderSidebarItem = (item, index) => (
     <div 
       key={index}
-      className={`p-6 w-44 border-b border-t-2 border-t-black cursor-pointer transition-all duration-300 hover:opacity-80 ${item.bgColor}`}
+      className={`p-3 sm:p-4 md:p-6 w-full sm:w-36 md:w-44 border-b border-t-2 border-t-black cursor-pointer transition-all duration-300 hover:opacity-80 ${item.bgColor}`}
       onClick={() => {
         const categoryMap = { RACE: 'race', AGE: 'age', SEX: 'gender' };
         handleCategoryClick(categoryMap[item.value]);
       }}
     >
-      <div className="text-lg font-medium mb-2 capitalize">{item.label}</div>
+      <div className="text-sm sm:text-base md:text-lg font-medium mb-1 sm:mb-2 capitalize">{item.label}</div>
       <div className="text-xs font-bold uppercase tracking-wide">{item.value}</div>
     </div>
   );
@@ -165,13 +187,13 @@ const Summary = () => {
   const renderTableItem = (item) => (
     <div 
       key={item.name}
-      className={`flex justify-between items-center py-3 px-4 cursor-pointer transition-all duration-300 ${
+      className={`flex justify-between items-center py-2 sm:py-3 px-3 sm:px-4 cursor-pointer transition-all duration-300 ${
         selectedItem === item.name ? 'bg-black text-white' : 'hover:bg-gray-200'
       }`}
       onClick={() => handleItemClick(item.name)}
     >
       <div className="flex items-center">
-        <div className={`relative w-3 h-3 mr-4 rotate-45 ${
+        <div className={`relative w-3 h-3 mr-3 sm:mr-4 rotate-45 ${
           selectedItem === item.name 
             ? 'border border-black bg-white' 
             : 'border border-gray-400'
@@ -180,96 +202,182 @@ const Summary = () => {
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 border border-black"></span>
           )}
         </div>
-        <span className="text-sm capitalize">{item.name}</span>
+        <span className="text-xs sm:text-sm capitalize">{item.name}</span>
       </div>
-      <span className={`text-sm ${selectedItem === item.name ? 'font-medium' : ''}`}>
+      <span className={`text-xs sm:text-sm ${selectedItem === item.name ? 'font-medium' : ''}`}>
         {item.percentage}%
       </span>
     </div>
   );
 
   return (
-    <div>
+    <div className="min-h-screen bg-white">
       <Navbar />
-      <div className="relative h-[calc(100vh-64px)] bg-white overflow-hidden">
-        
-        <div className="px-6 py-8">
-          <h2 className="text-xs font-bold text-black uppercase tracking-wide mb-8">
+      <div className="relative min-h-[calc(100vh-64px)] bg-white overflow-hidden">
+
+        <div className="px-4 sm:px-6 py-4 sm:py-6 md:py-8">
+          <h2 className="text-xs font-bold text-black uppercase tracking-wide mb-4 sm:mb-6 md:mb-8">
             A.I. ANALYSIS
           </h2>
-          <h1 className="text-6xl font-light text-black uppercase tracking-tight leading-none mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-black uppercase tracking-tight leading-none mb-2 sm:mb-3 md:mb-4">
             DEMOGRAPHICS
           </h1>
-          <p className="text-sm font-normal text-black uppercase tracking-wide">
+          <p className="text-xs sm:text-sm font-normal text-black uppercase tracking-wide">
             PREDICTED RACE & AGE
           </p>
         </div>
 
-        <div className="flex items-start justify-center px-6 py-6">
-          <div className="flex items-start justify-between w-full max-w-7xl gap-6">
+        <div className="px-4 sm:px-6 pb-20">
+
+          <div className="lg:hidden space-y-6">
             
-            <div className="flex flex-col space-y-3 flex-shrink-0 border-t-2 border-t-black">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full sm:w-fit">
               {getSidebarData().map(renderSidebarItem)}
             </div>
 
-            <div className="flex flex-col items-center border-t-2 border-black p-4 bg-gray-100 h-[500px] w-[60rem]">
-              <h2 className="text-4xl font-light text-black mb-8 self-start">
+            <div className="border-t-2 border-black p-4 bg-gray-100 min-h-[300px] sm:min-h-[350px]">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-light text-black mb-6 sm:mb-8">
                 {renderTitle()}
               </h2>
               
-              <div className="relative w-96 h-96 self-end">
-                <svg className="w-full h-full" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
-                  <circle cx="100" cy="100" r="90" fill="none" stroke="#e5e7eb" strokeWidth="4" />
-                  <circle
-                    cx="100" cy="100" r="90" fill="none" stroke="#000000" strokeWidth="4"
-                    strokeDasharray={getStrokeDashArray()} strokeLinecap="round"
-                    style={{ transition: 'stroke-dasharray 0.1s ease-out', transformOrigin: '100px 100px' }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-3xl font-light">{getSelectedItemData().percentage}%</span>
+              <div className="flex justify-center">
+                <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80">
+                  <svg className="w-full h-full" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle 
+                      cx="100" 
+                      cy="100" 
+                      r="90" 
+                      fill="none" 
+                      stroke="#e5e7eb" 
+                      strokeWidth="4" 
+                    />
+
+                    <circle
+                      cx="100" 
+                      cy="100" 
+                      r="90" 
+                      fill="none" 
+                      stroke="#000000" 
+                      strokeWidth="4"
+                      strokeDasharray={getStrokeDashArray()} 
+                      strokeLinecap="round"
+                      style={{ 
+                        transition: 'none', 
+                        transformOrigin: '100px 100px' 
+                      }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl sm:text-2xl md:text-3xl font-light">
+                      {getSelectedItemData().percentage}%
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="w-80 flex-shrink-0 bg-gray-100 h-[500px]">
+            <div className="bg-gray-100 min-h-[300px]">
               <div className="flex justify-between items-center mb-2 border-t-2 border-t-black"></div>
-              <div className='flex justify-between items-center mb-6 mt-4 px-4'>
-                <span className="text-sm font-bold uppercase tracking-wide">
+              <div className='flex justify-between items-center mb-4 sm:mb-6 mt-4 px-3 sm:px-4'>
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-wide">
                   {selectedCategory === 'gender' ? 'GENDER' : selectedCategory.toUpperCase()}
                 </span>
-                <span className="text-sm font-bold uppercase tracking-wide">A.I. CONFIDENCE</span>
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-wide">A.I. CONFIDENCE</span>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-0">
                 {getCurrentItems().map(renderTableItem)}
               </div>
             </div>
+          </div>
 
+          <div className="hidden lg:flex items-start justify-center py-6">
+            <div className="flex items-start justify-between w-full max-w-7xl gap-6">
+              
+              <div className="flex flex-col space-y-3 flex-shrink-0 border-t-2 border-t-black">
+                {getSidebarData().map(renderSidebarItem)}
+              </div>
+
+              <div className="flex flex-col items-center border-t-2 border-black p-4 bg-gray-100 h-[500px] w-[60rem]">
+                <h2 className="text-4xl font-light text-black mb-8 self-start">
+                  {renderTitle()}
+                </h2>
+                
+                <div className="relative w-96 h-96 self-end">
+                  <svg className="w-full h-full" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle 
+                      cx="100" 
+                      cy="100" 
+                      r="90" 
+                      fill="none" 
+                      stroke="#e5e7eb" 
+                      strokeWidth="4" 
+                    />
+
+                    <circle
+                      cx="100" 
+                      cy="100" 
+                      r="90" 
+                      fill="none" 
+                      stroke="#000000" 
+                      strokeWidth="4"
+                      strokeDasharray={getStrokeDashArray()} 
+                      strokeLinecap="round"
+                      style={{ 
+                        transition: 'none', 
+                        transformOrigin: '100px 100px' 
+                      }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-3xl font-light">
+                      {getSelectedItemData().percentage}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-80 flex-shrink-0 bg-gray-100 h-[500px]">
+                <div className="flex justify-between items-center mb-2 border-t-2 border-t-black"></div>
+                <div className='flex justify-between items-center mb-6 mt-4 px-4'>
+                  <span className="text-sm font-bold uppercase tracking-wide">
+                    {selectedCategory === 'gender' ? 'GENDER' : selectedCategory.toUpperCase()}
+                  </span>
+                  <span className="text-sm font-bold uppercase tracking-wide">A.I. CONFIDENCE</span>
+                </div>
+                
+                <div className="space-y-0">
+                  {getCurrentItems().map(renderTableItem)}
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
 
-        <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-          <p className="text-sm text-gray-600 tracking-wide">If A.I. estimate is wrong, select the correct one.</p>
+        <div className="absolute bottom-12 sm:bottom-14 md:bottom-16 left-1/2 transform -translate-x-1/2 px-4">
+          <p className="text-xs sm:text-sm text-gray-600 tracking-wide text-center">
+            If A.I. estimate is wrong, select the correct one.
+          </p>
         </div>
 
         <div 
           onClick={handleBackClick}
-          className="absolute bottom-3 left-10 flex items-center space-x-7 cursor-pointer z-30"
+          className="absolute bottom-3 sm:bottom-4 md:bottom-3 left-4 sm:left-6 md:left-10 flex items-center space-x-3 sm:space-x-5 md:space-x-7 cursor-pointer z-30"
         >
-          <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-            <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+            <span className="text-xs sm:text-sm rotate-[-95deg] transform translate-x-px">▶</span>
           </div>
-          <span className="text-sm font-bold text-black uppercase tracking-wide">BACK</span>
+          <span className="text-xs sm:text-sm font-bold text-black uppercase tracking-wide">BACK</span>
         </div>
 
         <div 
           onClick={handleHomeClick}
-          className="absolute bottom-3 right-10 flex items-center space-x-7 cursor-pointer z-30"
+          className="absolute bottom-3 sm:bottom-4 md:bottom-3 right-4 sm:right-6 md:right-10 flex items-center space-x-3 sm:space-x-5 md:space-x-7 cursor-pointer z-30"
         >
-          <span className="text-sm font-bold text-black uppercase tracking-wide">HOME</span>
-          <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-            <span className="text-sm rotate-[70deg] transform translate-x-px">▶</span>
+          <span className="text-xs sm:text-sm font-bold text-black uppercase tracking-wide">HOME</span>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+            <span className="text-xs sm:text-sm rotate-[70deg] transform translate-x-px">▶</span>
           </div>
         </div>
       </div>

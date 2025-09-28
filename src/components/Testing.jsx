@@ -188,11 +188,8 @@ const Testing = () => {
           console.log('API Response:', result);
 
           setTimeout(() => {
+            setIsLoading(false);
             setShowThankYou(true);
-
-            setTimeout(() => {
-              navigate('/result');
-            }, 4000);
           }, 2000); 
         } catch (error) {
           setIsLoading(false);

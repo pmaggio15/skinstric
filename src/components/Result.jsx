@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
@@ -6,8 +6,34 @@ import galleryIcon from '../assets/imgs/gallery-icon.png';
 import galleryLine from '../assets/imgs/GalleryLine.png';
 import cameraIcon from '../assets/imgs/camera-icon.jpeg';
 
+
+const ANIMATION_DURATIONS = {
+  SQUARE1: 65,
+  SQUARE2: 70,
+  SQUARE3: 75,
+  LOADING_DISPLAY: 3000,
+  PROCESSING_DISPLAY: 3000
+};
+
+const CAMERA_CONSTRAINTS = {
+  IDEAL: {
+    video: {
+      facingMode: 'user',
+      width: { ideal: 1280, min: 640 },
+      height: { ideal: 720, min: 480 }
+    },
+    audio: false
+  },
+  BASIC: {
+    video: { facingMode: 'user' },
+    audio: false
+  }
+};
+
 const Result = () => {
   const navigate = useNavigate();
+  
+
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -16,25 +42,33 @@ const Result = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [showCameraLoading, setShowCameraLoading] = useState(false);
   const [stream, setStream] = useState(null);
+  const [cameraError, setCameraError] = useState('');
 
-  const cameraLoadingSquare1Ref = useRef(null);
-  const cameraLoadingSquare2Ref = useRef(null);
-  const cameraLoadingSquare3Ref = useRef(null);
 
-  const square1Ref = useRef(null);
-  const square2Ref = useRef(null);
-  const square3Ref = useRef(null);
-  const leftSquare1Ref = useRef(null);
-  const leftSquare2Ref = useRef(null);
-  const leftSquare3Ref = useRef(null);
-  const galleryIconRef = useRef(null);
-  const cameraIconRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const processingSquare1Ref = useRef(null);
-  const processingSquare2Ref = useRef(null);
-  const processingSquare3Ref = useRef(null);
+  const refs = {
+
+    cameraLoadingSquare1: useRef(null),
+    cameraLoadingSquare2: useRef(null),
+    cameraLoadingSquare3: useRef(null),
+
+    square1: useRef(null),
+    square2: useRef(null),
+    square3: useRef(null),
+    leftSquare1: useRef(null),
+    leftSquare2: useRef(null),
+    leftSquare3: useRef(null),
+
+    processingSquare1: useRef(null),
+    processingSquare2: useRef(null),
+    processingSquare3: useRef(null),
+
+    galleryIcon: useRef(null),
+    cameraIcon: useRef(null),
+    fileInput: useRef(null),
+    video: useRef(null),
+    canvas: useRef(null)
+  };
+
 
   useEffect(() => {
     const storedData = localStorage.getItem('skinstricUserData');
@@ -52,266 +86,202 @@ const Result = () => {
     setLoading(false);
   }, [navigate]);
 
+  const animateSquares = useCallback((squareRefs, delays = [0, 0, 0]) => {
+    squareRefs.forEach((ref, index) => {
+      if (ref.current) {
+        gsap.to(ref.current, {
+          rotation: 360,
+          duration: Object.values(ANIMATION_DURATIONS)[index] || 65,
+          ease: "none",
+          repeat: -1,
+          delay: delays[index]
+        });
+      }
+    });
+  }, []);
+
   useEffect(() => {
-    if (square1Ref.current && square2Ref.current && square3Ref.current && 
-        leftSquare1Ref.current && leftSquare2Ref.current && leftSquare3Ref.current && 
-        !loading && !isProcessingImage && !showCamera && !showCameraModal && !showCameraLoading) {
+    const shouldAnimate = [refs.square1, refs.square2, refs.square3, refs.leftSquare1, refs.leftSquare2, refs.leftSquare3]
+      .every(ref => ref.current) && !loading && !isProcessingImage && !showCamera && !showCameraModal && !showCameraLoading;
+
+    if (shouldAnimate) {
+      animateSquares([refs.square1, refs.square2, refs.square3]);
+      animateSquares([refs.leftSquare1, refs.leftSquare2, refs.leftSquare3]);
+    }
+  }, [loading, isProcessingImage, showCamera, showCameraModal, showCameraLoading, animateSquares, refs]);
+
+  useEffect(() => {
+    if (showCameraLoading && [refs.cameraLoadingSquare1, refs.cameraLoadingSquare2, refs.cameraLoadingSquare3].every(ref => ref.current)) {
+      animateSquares([refs.cameraLoadingSquare1, refs.cameraLoadingSquare2, refs.cameraLoadingSquare3], [0, 1, 2]);
+    }
+  }, [showCameraLoading, animateSquares, refs]);
+
+  useEffect(() => {
+    if (isProcessingImage && [refs.processingSquare1, refs.processingSquare2, refs.processingSquare3].every(ref => ref.current)) {
+      animateSquares([refs.processingSquare1, refs.processingSquare2, refs.processingSquare3]);
+    }
+  }, [isProcessingImage, animateSquares, refs]);
+
+  useEffect(() => {
+    if (showCamera && stream && refs.video.current) {
+      console.log('Setting up video element with stream');
+      refs.video.current.srcObject = stream;
       
-      gsap.to(square1Ref.current, {
-        rotation: 360,
-        duration: 65,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(square2Ref.current, {
-        rotation: 360,
-        duration: 70,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(square3Ref.current, {
-        rotation: 360,
-        duration: 75,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(leftSquare1Ref.current, {
-        rotation: 360,
-        duration: 65,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(leftSquare2Ref.current, {
-        rotation: 360,
-        duration: 70,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(leftSquare3Ref.current, {
-        rotation: 360,
-        duration: 75,
-        ease: "none",
-        repeat: -1
+      refs.video.current.play().then(() => {
+        console.log('Video is playing successfully');
+      }).catch(error => {
+        console.error('Error starting video playback:', error);
+        setCameraError('Failed to start camera preview');
       });
     }
-  }, [loading, isProcessingImage, showCamera, showCameraModal]);
-
-  useEffect(() => {
-    if (cameraLoadingSquare1Ref.current && cameraLoadingSquare2Ref.current && cameraLoadingSquare3Ref.current && showCameraLoading) {
-      gsap.to(cameraLoadingSquare1Ref.current, {
-        rotation: 360,
-        duration: 65,
-        ease: "none",
-        repeat: -1,
-        delay: 0
-      });
-
-      gsap.to(cameraLoadingSquare2Ref.current, {
-        rotation: 360,
-        duration: 70,
-        ease: "none",
-        repeat: -1,
-        delay: 1
-      });
-
-      gsap.to(cameraLoadingSquare3Ref.current, {
-        rotation: 360,
-        duration: 75,
-        ease: "none",
-        repeat: -1,
-        delay: 3
-      });
-    }
-  }, [showCameraLoading]);
-
-  useEffect(() => {
-    if (processingSquare1Ref.current && processingSquare2Ref.current && processingSquare3Ref.current && isProcessingImage) {
-      gsap.to(processingSquare1Ref.current, {
-        rotation: 360,
-        duration: 65,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(processingSquare2Ref.current, {
-        rotation: 360,
-        duration: 70,
-        ease: "none",
-        repeat: -1
-      });
-
-      gsap.to(processingSquare3Ref.current, {
-        rotation: 360,
-        duration: 75,
-        ease: "none",
-        repeat: -1
-      });
-    }
-  }, [isProcessingImage]);
+  }, [showCamera, stream, refs.video]);
 
   useEffect(() => {
     return () => {
       if (stream) {
+        console.log('Cleaning up camera stream');
         stream.getTracks().forEach(track => track.stop());
       }
     };
   }, [stream]);
 
-  const handleGalleryHover = () => {
-    if (galleryIconRef.current) {
-      gsap.to(galleryIconRef.current, {
-        scale: 1.1,
-        duration: 0.3,
-        ease: "power2.out"
-      });
+  const handleHover = useCallback((ref, scale) => {
+    if (ref.current) {
+      gsap.to(ref.current, { scale, duration: 0.3, ease: "power2.out" });
     }
-  };
+  }, []);
 
-  const handleGalleryLeave = () => {
-    if (galleryIconRef.current) {
-      gsap.to(galleryIconRef.current, {
-        scale: 1,
-        duration: 0.3,
-        ease: "power2.out"
-      });
-    }
-  };
+  const handleGalleryClick = useCallback(() => {
+    refs.fileInput.current?.click();
+  }, [refs.fileInput]);
 
-  const handleCameraHover = () => {
-    if (cameraIconRef.current) {
-      gsap.to(cameraIconRef.current, {
-        scale: 1.1,
-        duration: 0.3,
-        ease: "power2.out"
-      });
-    }
-  };
-
-  const handleCameraLeave = () => {
-    if (cameraIconRef.current) {
-      gsap.to(cameraIconRef.current, {
-        scale: 1,
-        duration: 0.3,
-        ease: "power2.out"
-      });
-    }
-  };
-
-  const handleGalleryClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleCameraClick = () => {
+  const handleCameraClick = useCallback(() => {
+    console.log('Camera button clicked');
     setShowCameraModal(true);
-  };
+    setCameraError('');
+  }, []);
 
-  const handleCameraAllow = async () => {
+  const handleCameraAllow = useCallback(async () => {
+    console.log('User allowed camera access');
     setShowCameraModal(false);
     setShowCameraLoading(true);
+    setCameraError('');
     
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera access not supported in this browser');
+      }
+
       console.log('Requesting camera access...');
       
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: {
-          facingMode: 'user'
-        },
-        audio: false
-      });
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia(CAMERA_CONSTRAINTS.IDEAL);
+      } catch (idealError) {
+        console.log('Ideal constraints failed, trying basic constraints...');
+        mediaStream = await navigator.mediaDevices.getUserMedia(CAMERA_CONSTRAINTS.BASIC);
+      }
       
-      console.log('Camera access granted, stream:', mediaStream);
+      console.log('Camera access granted successfully');
       setStream(mediaStream);
 
       setTimeout(() => {
+        console.log('Switching to camera view');
         setShowCameraLoading(false);
         setShowCamera(true);
-        
-        if (videoRef.current && mediaStream) {
-          console.log('Setting is playing');
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.play().catch(e => console.error('Error playing video:', e));
-        }
-      }, 4000);
+      }, ANIMATION_DURATIONS.LOADING_DISPLAY);
       
     } catch (error) {
-      console.error('Error accessing camera:', error);
+      console.error('Camera access error:', error);
       setShowCameraLoading(false);
       
-      if (error.name === 'NotAllowedError') {
-        alert('Camera access denied. Please allow camera permissions in your browser and try again.');
-      } else if (error.name === 'NotFoundError') {
-        alert('No camera found. Please connect a camera and try again.');
-      } else if (error.name === 'NotSupportedError') {
-        alert('Camera access is not supported in this browser.');
-      } else {
-        alert(`Error accessing camera: ${error.message}. Please try again.`);
-      }
+      const errorMessage = getErrorMessage(error);
+      setCameraError(errorMessage);
+      alert(errorMessage);
     }
+  }, []);
+
+  const getErrorMessage = (error) => {
+    const baseMessage = 'Failed to access camera. ';
+    const errorMessages = {
+      NotAllowedError: 'Please allow camera permissions and try again.',
+      NotFoundError: 'No camera found on this device.',
+      NotSupportedError: 'Camera access is not supported in this browser.'
+    };
+    return baseMessage + (errorMessages[error.name] || error.message);
   };
 
-  const handleCameraDeny = () => {
+  const handleCameraDeny = useCallback(() => {
+    console.log('User denied camera access');
     setShowCameraModal(false);
-  };
+  }, []);
 
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      const context = canvas.getContext('2d');
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
-      
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        setStream(null);
-      }
-      
-      setShowCamera(false);
-      setSelectedImage(imageData);
-      processImage(imageData);
+  const capturePhoto = useCallback(() => {
+    if (!refs.video.current || !refs.canvas.current) {
+      console.error('Video or canvas element not available');
+      alert('Cannot capture photo. Please try again.');
+      return;
     }
-  };
 
-  const closeCamera = () => {
+    const canvas = refs.canvas.current;
+    const video = refs.video.current;
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    console.log('Capturing photo with dimensions:', canvas.width, 'x', canvas.height);
+    
+    context.save();
+    context.scale(-1, 1);
+    context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    context.restore();
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    console.log('Photo captured, size:', Math.round(imageData.length / 1024), 'KB');
+    
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    
+    setShowCamera(false);
+    setSelectedImage(imageData);
+    processImage(imageData);
+  }, [stream, refs.video, refs.canvas]);
+
+  const closeCamera = useCallback(() => {
+    console.log('Closing camera');
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
     setShowCamera(false);
-  };
+    setCameraError('');
+  }, [stream]);
 
-  const processImage = async (imageData) => {
+  const processImage = useCallback(async (imageData) => {
+    console.log('Processing image...');
     setIsProcessingImage(true);
     
     try {
-      const apiResult = await submitImageToAPI(imageData);
+      await submitImageToAPI(imageData);
+      console.log('Image processing completed');
       
       setTimeout(() => {
         setIsProcessingImage(false);
         navigate('/select');
-      }, 3000);
+      }, ANIMATION_DURATIONS.PROCESSING_DISPLAY);
     } catch (error) {
       console.error('Failed to process image:', error);
       setTimeout(() => {
         setIsProcessingImage(false);
         alert('Failed to process image. Please try again.');
-      }, 3000);
+      }, ANIMATION_DURATIONS.PROCESSING_DISPLAY);
     }
-  };
+  }, [navigate]);
 
-  const handleFileSelect = (event) => {
+  const handleFileSelect = useCallback((event) => {
     const file = event.target.files[0];
     if (file) {
       if (file.type.startsWith('image/')) {
@@ -326,48 +296,38 @@ const Result = () => {
         alert('Please select an image file (JPG, PNG, GIF, etc.)');
       }
     }
-  };
+  }, [processImage]);
 
-  const handleBackClick = () => {
+  const handleBackClick = useCallback(() => {
     if (showCamera) {
       closeCamera();
     } else if (showCameraModal) {
       setShowCameraModal(false);
     } else if (showCameraLoading) {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
       setShowCameraLoading(false);
     } else {
       navigate('/testing');
     }
-  };
-
-  const handleStartOver = () => {
-    localStorage.removeItem('skinstricUserData');
-    navigate('/');
-  };
+  }, [showCamera, showCameraModal, showCameraLoading, stream, closeCamera, navigate]);
 
   const submitImageToAPI = async (imageData) => {
-    try {
-      const response = await fetch('https://us-central1-api-skinstric-ai.cloudfunctions.net/skinstricPhaseTwo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: imageData,
-        }),
-      });
+    const response = await fetch('https://us-central1-api-skinstric-ai.cloudfunctions.net/skinstricPhaseTwo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData }),
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Phase Two API Response:', result);
-      return result;
-    } catch (error) {
-      console.error('Phase Two API Error:', error);
-      throw error;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const result = await response.json();
+    console.log('Phase Two API Response:', result);
+    return result;
   };
 
   const LoadingDots = () => {
@@ -378,15 +338,10 @@ const Result = () => {
     useEffect(() => {
       if (dot1Ref.current && dot2Ref.current && dot3Ref.current) {
         const tl = gsap.timeline({ repeat: -1 });
-
-        tl.to([dot1Ref.current, dot2Ref.current, dot3Ref.current], {
-          opacity: 0.3,
-          duration: 0.5,
-        })
-        .to(dot1Ref.current, { opacity: 1, duration: 0.3 })
-        .to(dot2Ref.current, { opacity: 1, duration: 0.3 }, "-=0.1")
-        .to(dot3Ref.current, { opacity: 1, duration: 0.3 }, "-=0.1");
-
+        tl.to([dot1Ref.current, dot2Ref.current, dot3Ref.current], { opacity: 0.3, duration: 0.5 })
+          .to(dot1Ref.current, { opacity: 1, duration: 0.3 })
+          .to(dot2Ref.current, { opacity: 1, duration: 0.3 }, "-=0.1")
+          .to(dot3Ref.current, { opacity: 1, duration: 0.3 }, "-=0.1");
         return () => tl.kill();
       }
     }, []);
@@ -399,6 +354,14 @@ const Result = () => {
       </div>
     );
   };
+
+  const RotatingSquares = ({ squareRefs, size = "w-72 h-72" }) => (
+    <>
+      <div ref={squareRefs[0]} className={`absolute ${size} border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2`}></div>
+      <div ref={squareRefs[1]} className={`absolute ${size} border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2`}></div>
+      <div ref={squareRefs[2]} className={`absolute ${size} border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2`}></div>
+    </>
+  );
 
   if (loading) {
     return (
@@ -421,43 +384,20 @@ const Result = () => {
         <Navbar />
         <div className="relative h-[calc(100vh-64px)] bg-white overflow-hidden">
           <div className="absolute top-0 left-0 px-6 py-2 z-30">
-            <h2 className="text-2xs font-bold text-black uppercase tracking-wide">
-              ANALYSIS RESULTS
-            </h2>
+            <h2 className="text-2xs font-bold text-black uppercase tracking-wide">ANALYSIS RESULTS</h2>
           </div>
-
           <div className="flex items-center justify-center h-full">
             <div className="relative">
-              <div 
-                ref={processingSquare1Ref}
-                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
-              <div 
-                ref={processingSquare2Ref}
-                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
-              <div 
-                ref={processingSquare3Ref}
-                className="absolute w-[25rem] h-[25rem] border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
-              
+              <RotatingSquares squareRefs={[refs.processingSquare1, refs.processingSquare2, refs.processingSquare3]} size="w-[25rem] h-[25rem]" />
               <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
                 <div className="text-center">
-                  <div className="text-l font-light text-gray-600 text-center whitespace-nowrap">
-                    PREPARING YOUR ANALYSIS
-                  </div>
-                  <div className="mt-4">
-                    <LoadingDots />
-                  </div>
+                  <div className="text-l font-light text-gray-600 text-center whitespace-nowrap">PREPARING YOUR ANALYSIS</div>
+                  <div className="mt-4"><LoadingDots /></div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div 
-            onClick={handleBackClick}
-            className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-50"
-          >
+          <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-50">
             <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
               <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
             </div>
@@ -474,69 +414,32 @@ const Result = () => {
         <Navbar />
         <div className="relative h-[calc(100vh-64px)] bg-white overflow-hidden">
           <div className="absolute top-0 left-0 px-6 py-2 z-30">
-            <h2 className="text-2xs font-bold text-black uppercase tracking-wide">
-              ANALYSIS RESULTS
-            </h2>
+            <h2 className="text-2xs font-bold text-black uppercase tracking-wide">ANALYSIS RESULTS</h2>
           </div>
-
           <div className="flex items-center justify-center h-full">
             <div className="relative">
-              <div 
-                ref={cameraLoadingSquare1Ref}
-                className="absolute w-72 h-72 border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
-              <div 
-                ref={cameraLoadingSquare2Ref}
-                className="absolute w-72 h-72 border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
-              <div 
-                ref={cameraLoadingSquare3Ref}
-                className="absolute w-72 h-72 border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
-
+              <RotatingSquares squareRefs={[refs.cameraLoadingSquare1, refs.cameraLoadingSquare2, refs.cameraLoadingSquare3]} size="w-96 h-96" />
               <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
                 <div className="w-32 h-32 overflow-hidden rounded-full">
-                  <img 
-                    src={cameraIcon} 
-                    alt="camera-Icon" 
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={cameraIcon} alt="camera-Icon" className="w-full h-full object-cover" />
                 </div>
               </div>
-
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-32 z-20">
-                <div className="text-lg font-bold text-black uppercase tracking-wide text-center whitespace-nowrap">
-                  SETTING UP CAMERA...
-                </div>
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-40 z-20">
+                <div className="text-lg font-bold text-black uppercase tracking-wide text-center whitespace-nowrap">SETTING UP CAMERA...</div>
               </div>
-
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-56 z-20 w-screen px-4">
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-64 z-20 w-screen px-4">
                 <div className="text-sm text-black font-medium uppercase tracking-wide text-center">
                   <div className="mb-8 whitespace-nowrap">TO GET BETTER RESULTS MAKE SURE TO HAVE</div>
-                  
-                  <div className="flex justify-center space-x-4">
-                    <div className="flex items-center">
-                      <span className="mr-1">◇</span>
-                      <span className='text-xs'>NEUTRAL EXPRESSION</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="mr-1">◇</span>
-                      <span className='text-xs'>FRONTAL POSE</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="mr-1">◇</span>
-                      <span className='text-xs'>ADEQUATE LIGHTING</span>
-                    </div>
+                  <div className="flex justify-center space-x-8 whitespace-nowrap">
+                    <div className="flex items-center"><span className="mr-2">◇</span><span className='text-xs'>NEUTRAL EXPRESSION</span></div>
+                    <div className="flex items-center"><span className="mr-2">◇</span><span className='text-xs'>FRONTAL POSE</span></div>
+                    <div className="flex items-center"><span className="mr-2">◇</span><span className='text-xs'>ADEQUATE LIGHTING</span></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          <div 
-            onClick={handleBackClick}
-            className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30"
-          >
+          <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30">
             <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
               <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
             </div>
@@ -546,47 +449,52 @@ const Result = () => {
       </div>
     );
   }
+
   if (showCamera) {
     return (
       <div>
         <Navbar />
         <div className="relative h-[calc(100vh-64px)] bg-black overflow-hidden">
           <div className="absolute top-0 left-0 px-6 py-2 z-30">
-            <h2 className="text-2xs font-bold text-white uppercase tracking-wide">
-              TAKE A SELFIE
-            </h2>
+            <h2 className="text-2xs font-bold text-white uppercase tracking-wide">TAKE A SELFIE</h2>
           </div>
-
           <div className="flex items-center justify-center h-full">
             <div className="relative">
-              <video 
-                ref={videoRef} 
-                autoPlay 
-                playsInline
-                muted
-                onLoadedMetadata={() => console.log('Video metadata loaded')}
-                onCanPlay={() => console.log('Video can play')}
-                className="w-96 h-96 object-cover rounded-full border-4 border-white transform scale-x-[-1]"
-                style={{ background: '#333' }}
-              />
-              
+              {cameraError ? (
+                <div className="w-96 h-96 rounded-full border-4 border-red-500 bg-red-900 flex items-center justify-center">
+                  <div className="text-red-200 text-center p-4">
+                    <div className="text-lg font-bold mb-2">Camera Error</div>
+                    <div className="text-sm">{cameraError}</div>
+                    <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded">RELOAD PAGE</button>
+                  </div>
+                </div>
+              ) : (
+                <video 
+                  ref={refs.video} 
+                  autoPlay 
+                  playsInline
+                  muted
+                  onLoadedMetadata={() => console.log('Video metadata loaded')}
+                  onCanPlay={() => console.log('Video can play')}
+                  onPlay={() => console.log('Video started playing')}
+                  onError={() => setCameraError('Video playback failed')}
+                  className="w-96 h-96 object-cover rounded-full border-4 border-white transform scale-x-[-1]"
+                  style={{ background: '#333' }}
+                />
+              )}
               <div className="absolute bottom-[-80px] left-1/2 transform -translate-x-1/2 flex space-x-4">
                 <button
                   onClick={capturePhoto}
-                  className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center"
+                  disabled={!!cameraError}
+                  className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="w-12 h-12 bg-white rounded-full border-2 border-gray-400"></div>
                 </button>
               </div>
             </div>
           </div>
-
-          <canvas ref={canvasRef} className="hidden" />
-
-          <div 
-            onClick={handleBackClick}
-            className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30"
-          >
+          <canvas ref={refs.canvas} className="hidden" />
+          <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30">
             <div className="w-10 h-10 border border-solid border-white rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
               <span className="text-sm rotate-[-95deg] transform translate-x-px text-white">▶</span>
             </div>
@@ -605,12 +513,7 @@ const Result = () => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="text-xl font-light text-gray-600 mb-4">No results found</div>
-              <button 
-                onClick={() => navigate('/testing')}
-                className="bg-black text-white px-6 py-2 text-sm font-medium"
-              >
-                TO START ANALYSIS
-              </button>
+              <button onClick={() => navigate('/testing')} className="bg-black text-white px-6 py-2 text-sm font-medium">TO START ANALYSIS</button>
             </div>
           </div>
         </div>
@@ -623,42 +526,20 @@ const Result = () => {
       <Navbar />
       <div className="relative h-[calc(100vh-64px)] bg-white overflow-hidden">
         <div className="absolute top-0 left-0 px-6 py-2 z-30">
-          <h2 className="text-2xs font-bold text-black uppercase tracking-wide">
-            ANALYSIS RESULTS
-          </h2>
+          <h2 className="text-2xs font-bold text-black uppercase tracking-wide">ANALYSIS RESULTS</h2>
         </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileSelect}
-          style={{ display: 'none' }}
-        />
+        <input ref={refs.fileInput} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
 
         {showCameraModal && (
           <div className="fixed inset-0 flex items-center justify-start z-50 pointer-events-none pl-96 mt-14">
             <div className="bg-black text-white shadow-2xl pointer-events-auto" style={{ width: '300px' }}>
-
               <div className="bg-black px-4 py-3 border-b border-gray-600">
-                <h3 className="text-xs font-bold uppercase tracking-wide text-white">
-                  ALLOW A.I. TO ACCESS YOUR CAMERA
-                </h3>
+                <h3 className="text-xs font-bold uppercase tracking-wide text-white">ALLOW A.I. TO ACCESS YOUR CAMERA</h3>
               </div>
-
               <div className="flex bg-black justify-end">
-                <button
-                  onClick={handleCameraDeny}
-                  className="bg-black text-white hover:text-gray-400 px-4 py-4 font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-                >
-                  DENY
-                </button>
-                <button
-                  onClick={handleCameraAllow}
-                  className="bg-black text-white hover:text-gray-400 px-4 py-4 font-bold text-sm uppercase tracking-wide transition-colors duration-200 ml-4"
-                >
-                  ALLOW
-                </button>
+                <button onClick={handleCameraDeny} className="bg-black text-white hover:text-gray-400 px-4 py-4 font-bold text-sm uppercase tracking-wide transition-colors duration-200">DENY</button>
+                <button onClick={handleCameraAllow} className="bg-black text-white hover:text-gray-400 px-4 py-4 font-bold text-sm uppercase tracking-wide transition-colors duration-200 ml-4">ALLOW</button>
               </div>
             </div>
           </div>
@@ -666,49 +547,24 @@ const Result = () => {
 
         <div className="absolute left-72 top-1/2 transform -translate-y-1/2 pointer-events-none">
           <div className="relative">
-            <div 
-              ref={leftSquare1Ref}
-              className="absolute w-72 h-72 border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            ></div>
-            <div 
-              ref={leftSquare2Ref}
-              className="absolute w-72 h-72 border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            ></div>
-            <div 
-              ref={leftSquare3Ref}
-              className="absolute w-72 h-72 border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            ></div>
-            
+            <RotatingSquares squareRefs={[refs.leftSquare1, refs.leftSquare2, refs.leftSquare3]} />
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
               <div 
-                ref={cameraIconRef}
+                ref={refs.cameraIcon}
                 className="w-40 h-40 overflow-hidden rounded-full cursor-pointer"
-                onMouseEnter={handleCameraHover}
-                onMouseLeave={handleCameraLeave}
+                onMouseEnter={() => handleHover(refs.cameraIcon, 1.1)}
+                onMouseLeave={() => handleHover(refs.cameraIcon, 1)}
                 onClick={handleCameraClick}
               >
-                <img 
-                  src={cameraIcon} 
-                  alt="camera-Icon" 
-                  className="w-full h-full object-cover"
-                />
+                <img src={cameraIcon} alt="camera-Icon" className="w-full h-full object-cover" />
               </div>
             </div>
-
             <div className="absolute right-1/2 bottom-1/2 transform translate-x-80 translate-y-56 scale-y-[-1] scale-x-[-1] z-30">
-              <img 
-                src={galleryLine} 
-                alt="Allow AI Access Gallery" 
-                className="w-auto h-auto"
-                style={{ maxWidth: '600px', maxHeight: '630px' }}
-              />
+              <img src={galleryLine} alt="Allow AI Scan Face" className="w-auto h-auto" style={{ maxWidth: '600px', maxHeight: '630px' }} />
             </div>
-          
             <div className="absolute right-1/2 bottom-1/2 transform translate-x-64 -translate-y-20 z-30">
               <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight whitespace-nowrap">
-                <div className='text-left'>ALLOW A.I.
-                  <br/>
-                  SCAN YOUR FACE</div>
+                <div className='text-left'>ALLOW A.I.<br/>SCAN YOUR FACE</div>
               </div>
             </div>
           </div>
@@ -716,58 +572,30 @@ const Result = () => {
 
         <div className="absolute right-60 top-1/2 transform -translate-y-1/2 pointer-events-none">
           <div className="relative">
-            <div 
-              ref={square1Ref}
-              className="absolute w-72 h-72 border-4 border-dotted border-gray-300 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            ></div>
-            <div 
-              ref={square2Ref}
-              className="absolute w-72 h-72 border-4 border-dotted border-gray-200 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            ></div>
-            <div 
-              ref={square3Ref}
-              className="absolute w-72 h-72 border-4 border-dotted border-gray-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-            ></div>
-            
+            <RotatingSquares squareRefs={[refs.square1, refs.square2, refs.square3]} />
             <div className="absolute left-1/2 top-1/2 transform -translate-x-48 -translate-y-1/2 z-20 pointer-events-auto">
               <div 
-                ref={galleryIconRef}
+                ref={refs.galleryIcon}
                 className="w-96 h-96 overflow-hidden rounded-full cursor-pointer"
-                onMouseEnter={handleGalleryHover}
-                onMouseLeave={handleGalleryLeave}
+                onMouseEnter={() => handleHover(refs.galleryIcon, 1.1)}
+                onMouseLeave={() => handleHover(refs.galleryIcon, 1)}
                 onClick={handleGalleryClick}
               >
-                <img 
-                  src={selectedImage || galleryIcon} 
-                  alt="Analysis result" 
-                  className="w-full h-full object-cover"
-                />
+                <img src={selectedImage || galleryIcon} alt="Analysis result" className="w-full h-full object-cover" />
               </div>
             </div>
-
             <div className="absolute left-1/2 top-1/2 transform -translate-x-80 -translate-y-60 rotate-12 z-30">
-              <img 
-                src={galleryLine} 
-                alt="Allow AI Access Gallery" 
-                className="w-auto h-auto"
-                style={{ maxWidth: '600px', maxHeight: '630px' }}
-              />
+              <img src={galleryLine} alt="Allow AI Access Gallery" className="w-auto h-auto" style={{ maxWidth: '600px', maxHeight: '630px' }} />
             </div>
-          
             <div className="absolute left-1/2 top-1/2 transform -translate-x-60 translate-y-20 z-30">
               <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight whitespace-nowrap">
-                <div className='text-right'>ALLOW A.I.
-                  <br/>
-                  ACCESS GALLERY</div>
+                <div className='text-right'>ALLOW A.I.<br/>ACCESS GALLERY</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div 
-          onClick={handleBackClick}
-          className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30"
-        >
+        <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30">
           <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
             <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
           </div>
@@ -779,6 +607,4 @@ const Result = () => {
 };
 
 export default Result;
-
-
 
