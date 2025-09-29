@@ -388,7 +388,7 @@ const Result = () => {
           </div>
           <div className="flex items-center justify-center h-full">
             <div className="relative">
-              <RotatingSquares squareRefs={[refs.processingSquare1, refs.processingSquare2, refs.processingSquare3]} size="w-[25rem] h-[25rem]" />
+              <RotatingSquares squareRefs={[refs.processingSquare1, refs.processingSquare2, refs.processingSquare3]} size="w-[25rem] h-[25rem] md:w-[25rem] md:h-[25rem]" />
               <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
                 <div className="text-center">
                   <div className="text-l font-light text-gray-600 text-center whitespace-nowrap">PREPARING YOUR ANALYSIS</div>
@@ -397,11 +397,11 @@ const Result = () => {
               </div>
             </div>
           </div>
-          <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-50">
-            <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-              <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
+          <div onClick={handleBackClick} className="absolute bottom-8 left-4 md:left-10 flex items-center space-x-4 md:space-x-7 cursor-pointer z-50">
+            <div className="w-8 h-8 md:w-10 md:h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <span className="text-xs md:text-sm rotate-[-95deg] transform translate-x-px">▶</span>
             </div>
-            <span className="text-sm font-bold text-black uppercase tracking-wide">BACK</span>
+            <span className="text-xs md:text-sm font-bold text-black uppercase tracking-wide">BACK</span>
           </div>
         </div>
       </div>
@@ -418,32 +418,32 @@ const Result = () => {
           </div>
           <div className="flex items-center justify-center h-full">
             <div className="relative">
-              <RotatingSquares squareRefs={[refs.cameraLoadingSquare1, refs.cameraLoadingSquare2, refs.cameraLoadingSquare3]} size="w-96 h-96" />
+              <RotatingSquares squareRefs={[refs.cameraLoadingSquare1, refs.cameraLoadingSquare2, refs.cameraLoadingSquare3]} size="w-64 h-64 md:w-96 md:h-96" />
               <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="w-32 h-32 overflow-hidden rounded-full">
+                <div className="w-24 h-24 md:w-32 md:h-32 overflow-hidden rounded-full">
                   <img src={cameraIcon} alt="camera-Icon" className="w-full h-full object-cover" />
                 </div>
               </div>
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-40 z-20">
-                <div className="text-lg font-bold text-black uppercase tracking-wide text-center whitespace-nowrap">SETTING UP CAMERA...</div>
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-32 md:translate-y-40 z-20">
+                <div className="text-sm md:text-lg font-bold text-black uppercase tracking-wide text-center whitespace-nowrap">SETTING UP CAMERA...</div>
               </div>
-              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-64 z-20 w-screen px-4">
-                <div className="text-sm text-black font-medium uppercase tracking-wide text-center">
-                  <div className="mb-8 whitespace-nowrap">TO GET BETTER RESULTS MAKE SURE TO HAVE</div>
-                  <div className="flex justify-center space-x-8 whitespace-nowrap">
-                    <div className="flex items-center"><span className="mr-2">◇</span><span className='text-xs'>NEUTRAL EXPRESSION</span></div>
-                    <div className="flex items-center"><span className="mr-2">◇</span><span className='text-xs'>FRONTAL POSE</span></div>
-                    <div className="flex items-center"><span className="mr-2">◇</span><span className='text-xs'>ADEQUATE LIGHTING</span></div>
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 translate-y-48 md:translate-y-64 z-20 w-screen px-4">
+                <div className="text-xs md:text-sm text-black font-medium uppercase tracking-wide text-center">
+                  <div className="mb-4 md:mb-8 whitespace-nowrap">TO GET BETTER RESULTS MAKE SURE TO HAVE</div>
+                  <div className="flex flex-col md:flex-row justify-center md:space-x-8 space-y-2 md:space-y-0 whitespace-nowrap">
+                    <div className="flex items-center justify-center"><span className="mr-2">◇</span><span className='text-2xs md:text-xs'>NEUTRAL EXPRESSION</span></div>
+                    <div className="flex items-center justify-center"><span className="mr-2">◇</span><span className='text-2xs md:text-xs'>FRONTAL POSE</span></div>
+                    <div className="flex items-center justify-center"><span className="mr-2">◇</span><span className='text-2xs md:text-xs'>ADEQUATE LIGHTING</span></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30">
-            <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-              <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
+          <div onClick={handleBackClick} className="absolute bottom-8 left-4 md:left-10 flex items-center space-x-4 md:space-x-7 cursor-pointer z-30">
+            <div className="w-8 h-8 md:w-10 md:h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <span className="text-xs md:text-sm rotate-[-95deg] transform translate-x-px">▶</span>
             </div>
-            <span className="text-sm font-bold text-black uppercase tracking-wide">BACK</span>
+            <span className="text-xs md:text-sm font-bold text-black uppercase tracking-wide">BACK</span>
           </div>
         </div>
       </div>
@@ -461,10 +461,10 @@ const Result = () => {
           <div className="flex items-center justify-center h-full">
             <div className="relative">
               {cameraError ? (
-                <div className="w-96 h-96 rounded-full border-4 border-red-500 bg-red-900 flex items-center justify-center">
+                <div className="w-64 h-64 md:w-96 md:h-96 rounded-full border-4 border-red-500 bg-red-900 flex items-center justify-center">
                   <div className="text-red-200 text-center p-4">
-                    <div className="text-lg font-bold mb-2">Camera Error</div>
-                    <div className="text-sm">{cameraError}</div>
+                    <div className="text-base md:text-lg font-bold mb-2">Camera Error</div>
+                    <div className="text-xs md:text-sm">{cameraError}</div>
                     <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs rounded">RELOAD PAGE</button>
                   </div>
                 </div>
@@ -478,27 +478,27 @@ const Result = () => {
                   onCanPlay={() => console.log('Video can play')}
                   onPlay={() => console.log('Video started playing')}
                   onError={() => setCameraError('Video playback failed')}
-                  className="w-96 h-96 object-cover rounded-full border-4 border-white transform scale-x-[-1]"
+                  className="w-64 h-64 md:w-96 md:h-96 object-cover rounded-full border-4 border-white transform scale-x-[-1]"
                   style={{ background: '#333' }}
                 />
               )}
-              <div className="absolute bottom-[-80px] left-1/2 transform -translate-x-1/2 flex space-x-4">
+              <div className="absolute bottom-[-60px] md:bottom-[-80px] left-1/2 transform -translate-x-1/2 flex space-x-4">
                 <button
                   onClick={capturePhoto}
                   disabled={!!cameraError}
-                  className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-full border-4 border-gray-300 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="w-12 h-12 bg-white rounded-full border-2 border-gray-400"></div>
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full border-2 border-gray-400"></div>
                 </button>
               </div>
             </div>
           </div>
           <canvas ref={refs.canvas} className="hidden" />
-          <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30">
-            <div className="w-10 h-10 border border-solid border-white rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-              <span className="text-sm rotate-[-95deg] transform translate-x-px text-white">▶</span>
+          <div onClick={handleBackClick} className="absolute bottom-8 left-4 md:left-10 flex items-center space-x-4 md:space-x-7 cursor-pointer z-30">
+            <div className="w-8 h-8 md:w-10 md:h-10 border border-solid border-white rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+              <span className="text-xs md:text-sm rotate-[-95deg] transform translate-x-px text-white">▶</span>
             </div>
-            <span className="text-sm font-bold text-white uppercase tracking-wide">BACK</span>
+            <span className="text-xs md:text-sm font-bold text-white uppercase tracking-wide">BACK</span>
           </div>
         </div>
       </div>
@@ -532,8 +532,8 @@ const Result = () => {
         <input ref={refs.fileInput} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
 
         {showCameraModal && (
-          <div className="fixed inset-0 flex items-center justify-start z-50 pointer-events-none pl-96 mt-14">
-            <div className="bg-black text-white shadow-2xl pointer-events-auto" style={{ width: '300px' }}>
+          <div className="fixed inset-0 flex items-center justify-center md:justify-start z-50 pointer-events-none md:pl-96 md:mt-14 px-4">
+            <div className="bg-black text-white shadow-2xl pointer-events-auto w-full max-w-xs md:max-w-none md:w-[300px]">
               <div className="bg-black px-4 py-3 border-b border-gray-600">
                 <h3 className="text-xs font-bold uppercase tracking-wide text-white">ALLOW A.I. TO ACCESS YOUR CAMERA</h3>
               </div>
@@ -545,61 +545,109 @@ const Result = () => {
           </div>
         )}
 
-        <div className="absolute left-72 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <div className="relative">
-            <RotatingSquares squareRefs={[refs.leftSquare1, refs.leftSquare2, refs.leftSquare3]} />
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
-              <div 
-                ref={refs.cameraIcon}
-                className="w-40 h-40 overflow-hidden rounded-full cursor-pointer"
-                onMouseEnter={() => handleHover(refs.cameraIcon, 1.1)}
-                onMouseLeave={() => handleHover(refs.cameraIcon, 1)}
-                onClick={handleCameraClick}
-              >
-                <img src={cameraIcon} alt="camera-Icon" className="w-full h-full object-cover" />
+        <div className="md:hidden flex flex-col items-center justify-center h-full space-y-40 px-4">
+          <div className="relative flex flex-col items-center">
+            <div className="relative">
+              <RotatingSquares squareRefs={[refs.leftSquare1, refs.leftSquare2, refs.leftSquare3]} size="w-48 h-48" />
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+                <div 
+                  ref={refs.cameraIcon}
+                  className="w-32 h-32 overflow-hidden rounded-full cursor-pointer"
+                  onMouseEnter={() => handleHover(refs.cameraIcon, 1.1)}
+                  onMouseLeave={() => handleHover(refs.cameraIcon, 1)}
+                  onClick={handleCameraClick}
+                >
+                  <img src={cameraIcon} alt="camera-Icon" className="w-full h-full object-cover" />
+                </div>
               </div>
             </div>
-            <div className="absolute right-1/2 bottom-1/2 transform translate-x-80 translate-y-56 scale-y-[-1] scale-x-[-1] z-30">
-              <img src={galleryLine} alt="Allow AI Scan Face" className="w-auto h-auto" style={{ maxWidth: '600px', maxHeight: '630px' }} />
+            <div className="mt-14 z-30">
+              <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight text-center">
+                ALLOW A.I.<br/>TO SCAN YOUR FACE
+              </div>
             </div>
-            <div className="absolute right-1/2 bottom-1/2 transform translate-x-64 -translate-y-20 z-30">
-              <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight whitespace-nowrap">
-                <div className='text-left'>ALLOW A.I.<br/>SCAN YOUR FACE</div>
+          </div>
+          
+          <div className="relative flex flex-col items-center">
+            <div className="relative">
+              <RotatingSquares squareRefs={[refs.square1, refs.square2, refs.square3]} size="w-48 h-48" />
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+                <div 
+                  ref={refs.galleryIcon}
+                  className="w-72 h-72 overflow-hidden rounded-full cursor-pointer"
+                  onMouseEnter={() => handleHover(refs.galleryIcon, 1.1)}
+                  onMouseLeave={() => handleHover(refs.galleryIcon, 1)}
+                  onClick={handleGalleryClick}
+                >
+                  <img src={selectedImage || galleryIcon} alt="Analysis result" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            </div>
+            <div className="mt-14 z-30">
+              <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight text-center">
+                ALLOW A.I.<br/>ACCESS GALLERY
               </div>
             </div>
           </div>
         </div>
 
-        <div className="absolute right-60 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <div className="relative">
-            <RotatingSquares squareRefs={[refs.square1, refs.square2, refs.square3]} />
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-48 -translate-y-1/2 z-20 pointer-events-auto">
-              <div 
-                ref={refs.galleryIcon}
-                className="w-96 h-96 overflow-hidden rounded-full cursor-pointer"
-                onMouseEnter={() => handleHover(refs.galleryIcon, 1.1)}
-                onMouseLeave={() => handleHover(refs.galleryIcon, 1)}
-                onClick={handleGalleryClick}
-              >
-                <img src={selectedImage || galleryIcon} alt="Analysis result" className="w-full h-full object-cover" />
+        <div className="hidden md:block">
+          <div className="absolute left-72 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <div className="relative">
+              <RotatingSquares squareRefs={[refs.leftSquare1, refs.leftSquare2, refs.leftSquare3]} />
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-auto">
+                <div 
+                  ref={refs.cameraIcon}
+                  className="w-40 h-40 overflow-hidden rounded-full cursor-pointer"
+                  onMouseEnter={() => handleHover(refs.cameraIcon, 1.1)}
+                  onMouseLeave={() => handleHover(refs.cameraIcon, 1)}
+                  onClick={handleCameraClick}
+                >
+                  <img src={cameraIcon} alt="camera-Icon" className="w-full h-full object-cover" />
+                </div>
+              </div>
+              <div className="absolute right-1/2 bottom-1/2 transform translate-x-80 translate-y-56 scale-y-[-1] scale-x-[-1] z-30">
+                <img src={galleryLine} alt="Allow AI Scan Face" className="w-auto h-auto" style={{ maxWidth: '600px', maxHeight: '630px' }} />
+              </div>
+              <div className="absolute right-1/2 bottom-1/2 transform translate-x-64 -translate-y-20 z-30">
+                <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight whitespace-nowrap">
+                  <div className='text-left'>ALLOW A.I.<br/>SCAN YOUR FACE</div>
+                </div>
               </div>
             </div>
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-80 -translate-y-60 rotate-12 z-30">
-              <img src={galleryLine} alt="Allow AI Access Gallery" className="w-auto h-auto" style={{ maxWidth: '600px', maxHeight: '630px' }} />
-            </div>
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-60 translate-y-20 z-30">
-              <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight whitespace-nowrap">
-                <div className='text-right'>ALLOW A.I.<br/>ACCESS GALLERY</div>
+          </div>
+
+          <div className="absolute right-60 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <div className="relative">
+              <RotatingSquares squareRefs={[refs.square1, refs.square2, refs.square3]} />
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-48 -translate-y-1/2 z-20 pointer-events-auto">
+                <div 
+                  ref={refs.galleryIcon}
+                  className="w-96 h-96 overflow-hidden rounded-full cursor-pointer"
+                  onMouseEnter={() => handleHover(refs.galleryIcon, 1.1)}
+                  onMouseLeave={() => handleHover(refs.galleryIcon, 1)}
+                  onClick={handleGalleryClick}
+                >
+                  <img src={selectedImage || galleryIcon} alt="Analysis result" className="w-full h-full object-cover" />
+                </div>
+              </div>
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-80 -translate-y-60 rotate-12 z-30">
+                <img src={galleryLine} alt="Allow AI Access Gallery" className="w-auto h-auto" style={{ maxWidth: '600px', maxHeight: '630px' }} />
+              </div>
+              <div className="absolute left-1/2 top-1/2 transform -translate-x-60 translate-y-20 z-30">
+                <div className="text-black text-xs font-bold uppercase tracking-wide leading-tight whitespace-nowrap">
+                  <div className='text-right'>ALLOW A.I.<br/>ACCESS GALLERY</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div onClick={handleBackClick} className="absolute bottom-8 left-10 flex items-center space-x-7 cursor-pointer z-30">
-          <div className="w-10 h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-            <span className="text-sm rotate-[-95deg] transform translate-x-px">▶</span>
+        <div onClick={handleBackClick} className="absolute bottom-8 left-4 md:left-10 flex items-center space-x-4 md:space-x-7 cursor-pointer z-30">
+          <div className="w-8 h-8 md:w-10 md:h-10 border border-solid border-gray-800 rotate-45 flex items-center justify-center hover:scale-110 transition-transform duration-300">
+            <span className="text-xs md:text-sm rotate-[-95deg] transform translate-x-px">▶</span>
           </div>
-          <span className="text-sm font-bold text-black uppercase tracking-wide">BACK</span>
+          <span className="text-xs md:text-sm font-bold text-black uppercase tracking-wide">BACK</span>
         </div>
       </div>
     </div>
@@ -607,4 +655,3 @@ const Result = () => {
 };
 
 export default Result;
-
